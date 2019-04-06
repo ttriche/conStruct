@@ -6,7 +6,7 @@
 \usage{
 conStruct(spatial = TRUE, K, freqs, geoDist = NULL, coords,
   prefix = "", n.chains = 1, n.iter = 1000, make.figs = TRUE,
-  save.files = TRUE)
+  save.files = TRUE, ...)
 }
 \arguments{
 \item{spatial}{A logical indicating whether to perform a spatial analysis. 
@@ -43,6 +43,8 @@ make figures once the analysis is complete. Default is
 \item{save.files}{A \code{logical} value indicating whether to automatically 
 save output and intermediate files once the analysis is
  complete. Default is \code{TRUE}.}
+
+\item{...}{Further options to be passed to rstan::sampling (e.g., adapt_delta).}
 }
 \value{
 This function returns a list with one entry for each chain run 
@@ -123,4 +125,25 @@ This function acts as a wrapper around a STAN model block determined
 		in addition to being returned.
 		If \code{make.figs=TRUE}, running \code{conStruct} will also generate many output figures, 
 		which are detailed in the function \code{make.all.the.plots} in this package.
+}
+\examples{
+# load example dataset
+data(conStruct.data)
+
+# run example spatial analysis with K=1
+	#	
+# for this example, make.figs and save.files
+#	are set to FALSE, but most users will want them 
+#	set to TRUE
+my.run <- conStruct(spatial = TRUE,
+		 			K = 1,
+		 			freqs = conStruct.data$allele.frequencies,
+		 			geoDist = conStruct.data$geoDist,
+		 			coords = conStruct.data$coords,
+		 			prefix = "test",
+		 			n.chains = 1,
+		 			n.iter = 1e3,
+		 			make.figs = FALSE,
+		 			save.files = FALSE)
+
 }

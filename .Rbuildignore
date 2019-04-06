@@ -1,6 +1,7 @@
+^CRAN-RELEASE$
 build.conStruct.pkg.R
 build.conStruct.pkg.Rout
-conStruct_1.0.0.tar.gz
+.*\.tar\.gz$
 sandbox/*
 testing/*
 cran-comments.md
@@ -12,3 +13,4 @@ src/init.o
 src/conStruct.so
 src/stan_files/.*\.o$
 src/stan_files/.*\.hpp$
+notes_for_next.release.txt

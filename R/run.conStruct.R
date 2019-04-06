@@ -32,6 +32,7 @@
 #' @param save.files A \code{logical} value indicating whether to automatically 
 #'						save output and intermediate files once the analysis is
 #'						 complete. Default is \code{TRUE}.
+#' @param ... Further options to be passed to rstan::sampling (e.g., adapt_delta).
 #'
 #' @return This function returns a list with one entry for each chain run 
 #'			(specified with \code{n.chains}). The entry for each chain is named 
@@ -103,10 +104,29 @@
 #'			If \code{make.figs=TRUE}, running \code{conStruct} will also generate many output figures, 
 #'			which are detailed in the function \code{make.all.the.plots} in this package.
 #'
+#' @examples
+#' # load example dataset
+#' data(conStruct.data)
+#' 
+#' # run example spatial analysis with K=1
+#' 	#	
+#'	# for this example, make.figs and save.files
+#'	#	are set to FALSE, but most users will want them 
+#'	#	set to TRUE
+#' my.run <- conStruct(spatial = TRUE,
+#'			 			K = 1,
+#'			 			freqs = conStruct.data$allele.frequencies,
+#'			 			geoDist = conStruct.data$geoDist,
+#'			 			coords = conStruct.data$coords,
+#'			 			prefix = "test",
+#'			 			n.chains = 1,
+#'			 			n.iter = 1e3,
+#'			 			make.figs = FALSE,
+#'			 			save.files = FALSE)
 #'
 #' @import rstan
 #' @export
-conStruct <- function(spatial=TRUE,K,freqs,geoDist=NULL,coords,prefix="",n.chains=1,n.iter=1e3,make.figs=TRUE,save.files=TRUE){
+conStruct <- function(spatial=TRUE,K,freqs,geoDist=NULL,coords,prefix="",n.chains=1,n.iter=1e3,make.figs=TRUE,save.files=TRUE,...){
 	call.check <- check.call(args <- as.list(environment()))
 	freq.data <- process.freq.data(freqs)
 	data.block <- make.data.block(K,freq.data,coords,spatial,geoDist)
@@ -120,7 +140,8 @@ conStruct <- function(spatial=TRUE,K,freqs,geoDist=NULL,coords,prefix="",n.chain
 							 	 iter = n.iter,
 							 	 chains = n.chains,
 							 	 thin = ifelse(n.iter/500 > 1,n.iter/500,1),
-							 	 save_warmup = FALSE)
+							 	 save_warmup = FALSE,
+							 	 ...)
 	conStruct.results <- get.conStruct.results(data.block,model.fit,n.chains)
 	data.block <- unstandardize.distances(data.block)
 	if(save.files){

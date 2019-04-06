@@ -47,6 +47,7 @@
 #' @param n.nodes Number of nodes to run parallel analyses on. Default is 
 #'		\code{NULL}. Ignored if \code{parallel} is \code{FALSE}. For more details 
 #'		in how to set up runs in parallel, see the model comparison vignette. 
+#' @param ... Further options to be passed to rstan::sampling (e.g., adapt_delta).
 #'	
 #' @return This function returns (and also saves as a .Robj) a \code{list} 
 #'		containing the standardized results of the cross-validation analysis
@@ -68,7 +69,7 @@
 #'	\code{K}.
 #'
 #'@export
-x.validation <- function(train.prop = 0.9, n.reps, K, freqs = NULL, data.partitions = NULL, geoDist, coords, prefix, n.iter, make.figs = FALSE, save.files = FALSE,parallel=FALSE,n.nodes=NULL){
+x.validation <- function(train.prop = 0.9, n.reps, K, freqs = NULL, data.partitions = NULL, geoDist, coords, prefix, n.iter, make.figs = FALSE, save.files = FALSE,parallel=FALSE,n.nodes=NULL,...){
 	call.check <- check.xval.call(args <- as.list(environment()))
 	if(is.null(data.partitions)){
 		data.partitions <- make.data.partitions(n.reps,freqs,train.prop)
@@ -87,7 +88,8 @@ x.validation <- function(train.prop = 0.9, n.reps, K, freqs = NULL, data.partiti
         								 prefix, 
         								 n.iter, 
         								 make.figs, 
-        								 save.files)
+        								 save.files,
+        								 ...)
     			 }
     names(x.val) <- paste0("rep_", 1:n.reps)
     x.val <- lapply(x.val, standardize.xvals)
@@ -143,6 +145,17 @@ x.validation <- function(train.prop = 0.9, n.reps, K, freqs = NULL, data.partiti
 #' 			The \code{admix.mat1.order} argument can be useful when running 
 #' 			this function to sync up plotting colors/order across the output 
 #' 			of more than two \code{conStruct} runs.
+#' 
+#' @examples
+#' \dontshow{
+#'		admix.props1 <- matrix(c(0.09,0.00,0.50,0.51,0.10,0.05,0.02,0.01,0.80,0.00,0.22,0.74,0.92,0.20,0.47,0.00,0.78,0.30,0.33,0.45,0.00,0.00,0.64,0.90,0.00,0.00,0.00,0.01,0.02,0.00,0.00,0.09,0.00,0.55,0.00,0.00,0.00,0.09,0.02,0.00,0.00,0.01,0.00,0.20,0.00,0.06,0.05,0.08,0.04,0.01,0.00,0.06,0.17,0.14,0.03,0.00,0.00,0.18,0.08,0.00,1.00,1.00,0.99,0.98,0.98,1.00,0.74,0.98,0.43,1.00,0.91,1.00,0.41,0.47,0.90,0.95,0.96,0.99,0.00,1.00,0.72,0.20,0.00,0.77,0.52,1.00,0.15,0.53,0.53,0.53,1.00,1.00,0.18,0.02,1.00,0.00,0.00,0.00,0.00,0.02,0.00,0.17,0.02,0.01,0.00),ncol=3)
+#'		admix.props2 <- matrix(c(0.36,0.35,0.42,0.38,0.35,0.35,0.36,0.35,0.48,0.36,0.39,0.39,0.40,0.36,0.36,0.35,0.40,0.46,0.45,0.38,0.34,0.35,0.47,0.40,0.35,1.00,1.00,0.99,0.99,0.98,1.00,0.84,0.99,0.63,1.00,0.32,0.35,0.24,0.24,0.33,0.34,0.33,0.35,0.15,0.32,0.32,0.10,0.30,0.33,0.27,0.36,0.13,0.26,0.27,0.22,0.36,0.35,0.14,0.11,0.35,0.00,0.00,0.00,0.01,0.01,0.00,0.07,0.00,0.18,0.00,0.32,0.30,0.34,0.38,0.31,0.30,0.31,0.30,0.36,0.32,0.30,0.51,0.30,0.31,0.37,0.30,0.47,0.29,0.28,0.40,0.30,0.31,0.39,0.49,0.30,0.00,0.00,0.00,0.00,0.01,0.00,0.09,0.01,0.19,0.00),ncol=3)
+#' }
+#' # compare the estimated admixture proportions from 
+#'	# two different conStruct runs to determine which 
+#'	# layers in one run correspond to those in the other
+#' match.layers.x.runs(admix.props1,admix.props2)
+#' 
 #'@export
 match.layers.x.runs <- function(admix.mat1,admix.mat2,admix.mat1.order=NULL){
 	#recover()
@@ -358,7 +371,7 @@ check.xval.call <- function(args){
 	return(invisible("args checked"))
 }
 
-xval.conStruct <- function (spatial = TRUE, K, data, geoDist = NULL, coords, prefix = "", n.chains = 1, n.iter = 1000, make.figs = TRUE, save.files = TRUE) {
+xval.conStruct <- function (spatial = TRUE, K, data, geoDist = NULL, coords, prefix = "", n.chains = 1, n.iter = 1000, make.figs = TRUE, save.files = TRUE, ...) {
     data.block <- xval.make.data.block(K, data, coords, spatial, geoDist)
     if (save.files) {
         save(data.block, file = paste0(prefix, "_data.block.Robj"))
@@ -370,7 +383,8 @@ xval.conStruct <- function (spatial = TRUE, K, data, geoDist = NULL, coords, pre
     							 iter = n.iter, 
     							 chains = n.chains, 
         						 thin = ifelse(n.iter/500 > 1, n.iter/500, 1), 
-        						 save_warmup = FALSE)
+        						 save_warmup = FALSE,
+                                 ...)
     conStruct.results <- get.conStruct.results(data.block,model.fit,n.chains)
 	data.block <- unstandardize.distances(data.block)
     if (save.files) {
@@ -384,13 +398,13 @@ xval.conStruct <- function (spatial = TRUE, K, data, geoDist = NULL, coords, pre
     return(conStruct.results)
 }
 
-x.validation.rep <- function(rep.no, K, data.partition, geoDist, coords, prefix, n.iter, make.figs = FALSE, save.files = FALSE) {
+x.validation.rep <- function(rep.no, K, data.partition, geoDist, coords, prefix, n.iter, make.figs = FALSE, save.files = FALSE, ...) {
     training.runs.sp <- lapply(K, function(k) {
         xval.conStruct(spatial = TRUE, K = k, 
 					   data = data.partition$training, 
 					   geoDist = geoDist, coords = coords, 
 					   prefix = paste0(prefix, "_sp_", "rep", rep.no, "K", k), 
-					   n.iter = n.iter, make.figs = make.figs, save.files = save.files)
+					   n.iter = n.iter, make.figs = make.figs, save.files = save.files, ...)
     })
     names(training.runs.sp) <- paste0("K", K)
     if (save.files) {
@@ -402,7 +416,7 @@ x.validation.rep <- function(rep.no, K, data.partition, geoDist, coords, prefix,
 					   data = data.partition$training, 
 					   geoDist = geoDist, coords = coords, 
 					   prefix = paste0(prefix, "_nsp_", "rep", rep.no, "K", k), 
-					   n.iter = n.iter, make.figs = make.figs, save.files = save.files)
+					   n.iter = n.iter, make.figs = make.figs, save.files = save.files, ...)
     })
     names(training.runs.nsp) <- paste0("K", K)
     if (save.files) {
